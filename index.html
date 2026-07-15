@@ -1,1 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MLB Center</title>
+<link rel="preconnect" href="https://statsapi.mlb.com">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="app-header">
+  <div class="header-inner">
+    <h1><span class="ball">⚾</span> MLB Center</h1>
+    <p class="subtitle">Marcadores en vivo, posiciones y equipos de las Grandes Ligas</p>
+  </div>
+</header>
 
+<nav class="tabs">
+  <button class="tab-btn active" data-tab="hoy">Partidos</button>
+  <button class="tab-btn" data-tab="posiciones">Posiciones</button>
+  <button class="tab-btn" data-tab="equipos">Equipos</button>
+</nav>
+
+<main>
+  <section id="tab-hoy" class="tab-content active">
+    <div class="date-control">
+      <button id="prev-day" title="Dia anterior">&#8592;</button>
+      <input type="date" id="date-picker">
+      <button id="next-day" title="Dia siguiente">&#8594;</button>
+      <button id="today-btn">Hoy</button>
+    </div>
+    <div id="games-list" class="games-list">
+      <p class="loading">Cargando partidos...</p>
+    </div>
+  </section>
+
+  <section id="tab-posiciones" class="tab-content">
+    <div class="league-toggle">
+      <button class="league-btn active" data-league="103">American League</button>
+      <button class="league-btn" data-league="104">National League</button>
+    </div>
+    <div id="standings-container">
+      <p class="loading">Cargando posiciones...</p>
+    </div>
+  </section>
+
+  <section id="tab-equipos" class="tab-content">
+    <div id="teams-grid" class="teams-grid">
+      <p class="loading">Cargando equipos...</p>
+    </div>
+  </section>
+</main>
+
+<div id="team-modal" class="modal hidden">
+  <div class="modal-content">
+    <button id="modal-close" class="modal-close">&times;</button>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<footer>
+  <p>Datos en vivo proporcionados por la API oficial de MLB Stats (statsapi.mlb.com)</p>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
