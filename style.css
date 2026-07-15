@@ -329,3 +329,85 @@ footer {
   font-size: 0.78rem;
   padding: 20px;
 }
+
+.analysis-intro {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.85rem;
+  max-width: 700px;
+  margin: 0 auto 20px;
+  line-height: 1.5;
+}
+
+.analysis-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+}
+
+.analysis-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.analysis-teams {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.analysis-team {
+  flex: 1;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.analysis-team img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto 6px;
+}
+
+.analysis-vs {
+  color: var(--muted);
+  font-weight: 700;
+  padding: 0 10px;
+}
+
+table.analysis-stats {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  margin-top: 8px;
+}
+
+table.analysis-stats th, table.analysis-stats td {
+  padding: 5px 6px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+}
+
+table.analysis-stats th {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+}
+
+table.analysis-stats td:first-child {
+  text-align: left;
+  color: var(--muted);
+}
+
+.analysis-pitchers {
+  margin-top: 10px;
+  font-size: 0.8rem;
+  color: var(--muted);
+  text-align: center;
+}
