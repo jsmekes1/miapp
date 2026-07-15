@@ -19,6 +19,7 @@
   <button class="tab-btn active" data-tab="hoy">Partidos</button>
   <button class="tab-btn" data-tab="posiciones">Posiciones</button>
   <button class="tab-btn" data-tab="equipos">Equipos</button>
+  <button class="tab-btn" data-tab="analisis">Analisis</button>
 </nav>
 
 <main>
@@ -47,6 +48,13 @@
   <section id="tab-equipos" class="tab-content">
     <div id="teams-grid" class="teams-grid">
       <p class="loading">Cargando equipos...</p>
+    </div>
+  </section>
+
+  <section id="tab-analisis" class="tab-content">
+    <p class="analysis-intro">Comparativa estadistica de los partidos de la fecha seleccionada en la pestana Partidos: record, racha, rendimiento local/visitante, ultimos 10 juegos y abridores probables. Esto es informacion, no una recomendacion de apuesta.</p>
+    <div id="analysis-list" class="analysis-list">
+      <p class="loading">Cargando analisis...</p>
     </div>
   </section>
 </main>
