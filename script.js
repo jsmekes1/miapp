@@ -10,6 +10,8 @@ const state = {
   teamsLoaded: false,
   standingsLoadedLeague: null,
   divisionsMap: null,
+  teamStatsMap: null,
+  analysisLoadedDate: null,
   refreshTimer: null,
 };
 
@@ -45,6 +47,9 @@ function setupTabs() {
       }
       if (tab === "equipos" && !state.teamsLoaded) {
         loadTeams();
+      }
+      if (tab === "analisis" && state.analysisLoadedDate !== toDateInputValue(state.currentDate)) {
+        loadAnalysis();
       }
     });
   });
@@ -314,7 +319,7 @@ async function openTeamModal(teamId, teamName) {
     body.innerHTML =
       '<div class="modal-team-header">' +
         '<img src="' + teamLogo(teamId) + '" alt="" onerror="this.style.display=\'none\'">' +
-        "<div><h2>" + teamName + "</h2><p>" + venue + (firstYear ? " · Desde " + firstYear : "") + "</p></div>" +
+        "<div><h2>" + teamName + "</h2><p>" + venue + (firstYear ? " \u00b7 Desde " + firstYear : "") + "</p></div>" +
       "</div>" +
       '<ul class="roster-list">' + (rosterItems || "<li>Roster no disponible.</li>") + "</ul>";
   } catch (err) {
@@ -330,6 +335,116 @@ function setupModal() {
   modal.addEventListener("click", (e) => {
     if (e.target === modal) modal.classList.add("hidden");
   });
+}
+
+/* ---------- Analisis (comparativa, sin recomendaciones de apuesta) ---------- */
+
+async function getTeamStatsMap() {
+  if (state.teamStatsMap) return state.teamStatsMap;
+  const season = new Date().getFullYear();
+  try {
+    const res = await fetch(API_BASE + "/standings?leagueId=103,104&season=" + season + "&standingsTypes=regularSeason");
+    const data = await res.json();
+    const map = {};
+    (data.records || []).forEach((rec) => {
+      (rec.teamRecords || []).forEach((tr) => {
+        const splits = {};
+        ((tr.records && tr.records.splitRecords) || []).forEach((s) => {
+          splits[s.type] = s.wins + "-" + s.losses;
+        });
+        map[tr.team.id] = {
+          wins: tr.leagueRecord.wins,
+          losses: tr.leagueRecord.losses,
+          pct: tr.leagueRecord.pct,
+          streak: tr.streak ? tr.streak.streakCode : "-",
+          home: splits.home || "-",
+          away: splits.away || "-",
+          lastTen: splits.lastTen || "-",
+          runsScored: tr.runsScored,
+          runsAllowed: tr.runsAllowed,
+        };
+      });
+    });
+    state.teamStatsMap = map;
+    return map;
+  } catch (e) {
+    return {};
+  }
+}
+
+function statLine(stats) {
+  if (!stats) return { record: "-", streak: "-", home: "-", away: "-", lastTen: "-", diff: "-" };
+  let diff = "-";
+  if (typeof stats.runsScored === "number" && typeof stats.runsAllowed === "number") {
+    const d = stats.runsScored - stats.runsAllowed;
+    diff = (d > 0 ? "+" : "") + d;
+  }
+  return {
+    record: stats.wins + "-" + stats.losses + " (" + stats.pct + ")",
+    streak: stats.streak,
+    home: stats.home,
+    away: stats.away,
+    lastTen: stats.lastTen,
+    diff: diff,
+  };
+}
+
+async function loadAnalysis() {
+  const container = document.getElementById("analysis-list");
+  container.innerHTML = '<p class="loading">Cargando analisis...</p>';
+  const dateStr = toDateInputValue(state.currentDate);
+
+  try {
+    const [statsMap, res] = await Promise.all([
+      getTeamStatsMap(),
+      fetch(API_BASE + "/schedule?sportId=1&date=" + dateStr + "&hydrate=team,probablePitcher"),
+    ]);
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    const games = (data.dates && data.dates[0] && data.dates[0].games) || [];
+    renderAnalysis(games, statsMap);
+    state.analysisLoadedDate = dateStr;
+  } catch (err) {
+    container.innerHTML = '<p class="error">No se pudo cargar el analisis.</p>';
+  }
+}
+
+function renderAnalysis(games, statsMap) {
+  const container = document.getElementById("analysis-list");
+  if (!games.length) {
+    container.innerHTML = '<p class="empty">No hay partidos programados para esta fecha (revisa la pestana Partidos para cambiar de fecha).</p>';
+    return;
+  }
+
+  container.innerHTML = games.map((game) => {
+    const away = game.teams.away;
+    const home = game.teams.home;
+    const awayStats = statLine(statsMap[away.team.id]);
+    const homeStats = statLine(statsMap[home.team.id]);
+    const awayPitcher = away.probablePitcher ? away.probablePitcher.fullName : "Por confirmar";
+    const homePitcher = home.probablePitcher ? home.probablePitcher.fullName : "Por confirmar";
+
+    return (
+      '<div class="analysis-card">' +
+        '<div class="analysis-teams">' +
+          '<div class="analysis-team"><img src="' + teamLogo(away.team.id) + '" alt="" onerror="this.style.display=\'none\'"><div>' + away.team.name + "</div></div>" +
+          '<span class="analysis-vs">@</span>' +
+          '<div class="analysis-team"><img src="' + teamLogo(home.team.id) + '" alt="" onerror="this.style.display=\'none\'"><div>' + home.team.name + "</div></div>" +
+        "</div>" +
+        '<table class="analysis-stats">' +
+          "<thead><tr><th></th><th>" + away.team.abbreviation + "</th><th>" + home.team.abbreviation + "</th></tr></thead>" +
+          "<tbody>" +
+            "<tr><td>Record</td><td>" + awayStats.record + "</td><td>" + homeStats.record + "</td></tr>" +
+            "<tr><td>Racha</td><td>" + awayStats.streak + "</td><td>" + homeStats.streak + "</td></tr>" +
+            "<tr><td>Visit./Local</td><td>" + awayStats.away + "</td><td>" + homeStats.home + "</td></tr>" +
+            "<tr><td>Ultimos 10</td><td>" + awayStats.lastTen + "</td><td>" + homeStats.lastTen + "</td></tr>" +
+            "<tr><td>Dif. carreras</td><td>" + awayStats.diff + "</td><td>" + homeStats.diff + "</td></tr>" +
+          "</tbody>" +
+        "</table>" +
+        '<div class="analysis-pitchers">Abridores probables: ' + awayPitcher + " vs " + homePitcher + "</div>" +
+      "</div>"
+    );
+  }).join("");
 }
 
 /* ---------- Auto refresh ---------- */
